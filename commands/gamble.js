@@ -72,7 +72,7 @@ module.exports = gamble;
 
 class GamblingGame {
     constructor(max, gamemaster, channel) {
-        this.max = max;
+        this.max = +max;
         this.gamemaster = gamemaster;
         this.channel = channel;
         this.isRolling = false;
@@ -98,9 +98,7 @@ The person with the lowest roll will pay the person with the highest roll the di
             return;
         }
 
-        if (!max) {
-            max = this.max;
-        }
+        max = !max ? this.max : +max;
 
         if (max !== this.max) {
             this.channel.send(`<@${user.id}> you must roll out of ${this.max}`);
@@ -112,11 +110,19 @@ The person with the lowest roll will pay the person with the highest roll the di
             return;
         }
 
-        const roll = getRandomNumber(max);
+        this.players[user.id].roll = getRandomNumber(max);
 
-        this.players[user.id].roll = roll;
+        // Volkner always scores a critical hit on 9999
+        if (user.id === '118415403272634369' && max === 9999) {
+            this.players[user.id].roll = max;
+        }
 
-        this.channel.send(`<@${user.id}> rolled a ${numberFormat(this.players[user.id].roll)}`);
+        let criticalHitStr = '';
+        if (this.players[user.id].roll === max) {
+            criticalHitStr = ` **It's a critical hit!**`;
+        }
+
+        this.channel.send(`<@${user.id}> rolled a ${numberFormat(this.players[user.id].roll)}.${criticalHitStr}`);
 
         this.checkGameEnd();
     }

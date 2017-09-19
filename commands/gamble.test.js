@@ -355,6 +355,24 @@ test('Prints who still needs to roll', async (t) => {
     t.regex(callArg, new RegExp(`Some people still need to roll:\n\n<@${player.id}>`));
 });
 
+test('It\'s a critical hit!', async (t) => {
+    await startGame(t, 9999);
+
+    await startRolling(t);
+
+    await gamble.process({
+        command: 'roll',
+        args: ['9999'],
+        author: gamemaster,
+        channel: t.context.channel,
+    });
+
+    const callArg = t.context.channelSendStub.lastCall.args[0];
+    t.regex(callArg, /It's a critical hit!/);
+
+    t.is(gamble.currentGame.players[gamemaster.id].roll, 9999);
+});
+
 test('Determines the winner', async (t) => {
     await startGame(t);
 
@@ -379,16 +397,16 @@ test('Determines the winner', async (t) => {
 });
 
 
-async function startGame(t) {
+async function startGame(t, max = 500) {
     await gamble.process({
         command: 'gamble',
-        args: [500],
+        args: [max],
         author: gamemaster,
         channel: t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /@here \*\*Let's gamble!\*\* :moneybag: Playing for 500 gold/);
+    t.regex(callArg, /@here \*\*Let's gamble!\*\* :moneybag: Playing for [\d,]+ gold/);
 }
 
 async function startRolling(t) {
@@ -414,7 +432,7 @@ async function startRolling(t) {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /\n\n\*\*Type `!roll 500` to roll\*\*/);
+    t.regex(callArg, /\n\n\*\*Type `!roll [\d,]+` to roll\*\*/);
 
     t.true(gamble.currentGame.isRolling);
 }
