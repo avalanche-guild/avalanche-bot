@@ -1,0 +1,17 @@
+{
+  "name": "avalanche-bot",
+  "version": "1.0.0",
+  "description": "A bot for the AVALANCHE Discord server.",
+  "main": "index.js",
+  "repository": "https://github.com/avalanche-guild/avalanche-bot",
+  "author": "Cameron Spear <cameronspear@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node ."
+  },
+  "dependencies": {
+    "discord.js": "11.2.1",
+    "lodash": "4.17.4"
+  }
+}
