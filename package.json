@@ -8,21 +8,34 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "node .",
-    "test": "nyc ava --serial"
+    "start": "node ./dist/",
+    "clean": "rm -Rf ./dist/ ./coverage/ ./nyc_output/",
+    "build": "npm run clean && tsc",
+    "dev": "node-dev --require ts-node/register ./index.ts",
+    "test": "npm run build && nyc ava --serial"
   },
   "dependencies": {
+    "app-root-path": "2.0.1",
     "bluebird": "3.5.0",
     "discord.js": "11.2.1",
-    "lodash": "4.17.4"
+    "lodash": "4.17.4",
+    "mockery": "2.1.0"
   },
   "devDependencies": {
+    "@types/app-root-path": "1.2.4",
+    "@types/lodash": "4.14.74",
+    "@types/mockery": "1.4.29",
+    "@types/node": "8.0.28",
+    "@types/sinon": "2.3.5",
     "ava": "0.22.0",
+    "node-dev": "3.1.3",
     "nyc": "11.2.1",
-    "sinon": "3.3.0"
+    "sinon": "3.3.0",
+    "ts-node": "3.3.0",
+    "typescript": "2.5.2"
   },
   "nyc": {
-    "all": true,
+    "all": false,
     "checkCoverage": true,
     "perFile": true,
     "lines": 80,
@@ -33,10 +46,11 @@
       "html"
     ],
     "exclude": [
-      "**/*.test.js"
+      "**/*.test.js",
+      "dist/index.js"
     ],
     "include": [
-      "commands"
+      "dist"
     ]
   }
 }

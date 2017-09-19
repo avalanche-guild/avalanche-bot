@@ -1,8 +1,34 @@
-const _ = require('lodash');
-const test = require('ava');
-const sinon = require('sinon');
+import test from 'ava';
+import { TextChannel, User } from 'discord.js';
+import * as _ from 'lodash';
+import * as mockery from 'mockery';
+import * as sinon from 'sinon';
 
-const gamble = require('./gamble');
+import { CommandMessage } from '../index';
+
+let command;
+let gamble;
+test.before(() => {
+    // must register mocks before importing other modules
+    mockery.registerMock('../lib/stats', {
+        fetch: sinon.stub().returns({}),
+        save: sinon.stub(),
+    });
+
+    mockery.enable({
+        warnOnUnregistered: false,
+    });
+
+    const module = require('./gamble');
+    command = module.command;
+    gamble = module.gamble;
+});
+
+test.after(() => {
+    mockery.deregisterAll();
+    mockery.disable();
+});
+
 
 const gamemaster = {
     id: '118415403272634369',
@@ -10,7 +36,7 @@ const gamemaster = {
 };
 
 const player = {
-    id: 2,
+    id: '2',
     username: 'Zaahn',
 };
 
@@ -27,22 +53,22 @@ test.beforeEach((t) => {
 });
 
 test('Does nothing on nonexistant command', async (t) => {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'banana',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     t.is(t.context.channelSendStub.callCount, 0);
 });
 
 test('Can\'t do other commands without a game started', async (t) => {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     t.is(t.context.channelSendStub.callCount, 0);
@@ -51,11 +77,11 @@ test('Can\'t do other commands without a game started', async (t) => {
 test('Must play in a channel', async (t) => {
     delete t.context.channel.name;
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -63,11 +89,11 @@ test('Must play in a channel', async (t) => {
 });
 
 test('Must specify a max amount', async (t) => {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -75,11 +101,11 @@ test('Must specify a max amount', async (t) => {
 });
 
 test('Max amount must be an integer, not a string', async (t) => {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
         args: ['banana'],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -87,11 +113,11 @@ test('Max amount must be an integer, not a string', async (t) => {
 });
 
 test('Max amount must be an integer, not a float', async (t) => {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
-        args: [5.245],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['5.245'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -106,11 +132,11 @@ test('Starts game with correct input', async (t) => {
 test('Only one game in this channel', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -126,11 +152,11 @@ test('Only one game globally', async (t) => {
         send: t.context.channelSendStub,
     };
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'gamble',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -140,11 +166,11 @@ test('Only one game globally', async (t) => {
 test('Won\'t let you play without at least 2 people', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'play',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -156,20 +182,20 @@ test('Will allow you to withdraw', async (t) => {
 
     t.is(_.size(gamble.currentGame.players), 0);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'enter',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     t.is(_.size(gamble.currentGame.players), 1);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'withdraw',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     t.is(_.size(gamble.currentGame.players), 0);
@@ -178,11 +204,11 @@ test('Will allow you to withdraw', async (t) => {
 test('Can cancel the game', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'cancel',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -194,11 +220,11 @@ test('Can cancel the game', async (t) => {
 test('Only gamemaster can cancel the game', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'cancel',
         args: [],
-        author: player,
-        channel: t.context.channel,
+        author: <User>player,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -210,11 +236,11 @@ test('Only gamemaster can cancel the game', async (t) => {
 test('Only gamemaster can start the game', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'play',
         args: [],
-        author: player,
-        channel: t.context.channel,
+        author: <User>player,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -226,11 +252,11 @@ test('Only gamemaster can start the game', async (t) => {
 test('Can\'t start rolling until the gamemaster says so', async (t) => {
     await startGame(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
         args: [],
-        author: player,
-        channel: t.context.channel,
+        author: <User>player,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -248,11 +274,11 @@ test('Can\'t enter after rolling has started', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'enter',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -264,11 +290,11 @@ test('Can\'t withdraw after rolling has started', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'withdraw',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -280,11 +306,11 @@ test('The proper pot amount is implied with `!roll`', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -296,11 +322,11 @@ test('Must roll the correct amount', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [1000],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['1000'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -312,20 +338,20 @@ test('Can\'t roll twice', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [500],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['500'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const roll = gamble.currentGame.players[gamemaster.id].roll;
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [500],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['500'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -337,18 +363,18 @@ test('Prints who still needs to roll', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [500],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['500'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'play',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -356,15 +382,15 @@ test('Prints who still needs to roll', async (t) => {
 });
 
 test('It\'s a critical hit!', async (t) => {
-    await startGame(t, 9999);
+    await startGame(t, '9999');
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
         args: ['9999'],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -378,18 +404,18 @@ test('Determines the winner', async (t) => {
 
     await startRolling(t);
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [500],
-        author: gamemaster,
-        channel: t.context.channel,
+        args: ['500'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'roll',
-        args: [500],
-        author: player,
-        channel: t.context.channel,
+        args: ['500'],
+        author: <User>player,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -397,12 +423,12 @@ test('Determines the winner', async (t) => {
 });
 
 
-async function startGame(t, max = 500) {
-    await gamble.process({
+async function startGame(t, max = '500') {
+    await command(<CommandMessage>{
         command: 'gamble',
         args: [max],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
@@ -410,25 +436,25 @@ async function startGame(t, max = 500) {
 }
 
 async function startRolling(t) {
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'enter',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'enter',
         args: [],
-        author: player,
-        channel: t.context.channel,
+        author: <User>player,
+        channel: <TextChannel>t.context.channel,
     });
 
-    await gamble.process({
+    await command(<CommandMessage>{
         command: 'play',
         args: [],
-        author: gamemaster,
-        channel: t.context.channel,
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
