@@ -7,6 +7,10 @@ import { fetch, save } from '../lib/stats';
 const VOLKNER_ID = '118415403272634369';
 
 export async function command({ command, args, author, channel }: CommandMessage) {
+    if (_.includes(['gambleStats'], command)) {
+        return await gamble[command](args, author, channel);
+    }
+
     if (gamble[command]) {
         if (gamble.currentGame && gamble.currentGame.channel.name !== channel.name) {
             return currentGameError(channel);
@@ -51,6 +55,17 @@ export const gamble = {
         }
 
         gamble.currentGame = new GamblingGame(max, user, channel);
+    },
+
+    async gambleStats(args, user, channel) {
+        const stats = _.sortBy(await fetch('gamble'), stat => stat.score * -1);
+        console.log(stats);
+
+        const scores = _.map(stats, ({ username, score, id }) => {
+            return `<@${id}>: ${score}`;
+        }).join('\n');
+
+        channel.send(`**Running Totals:**\n\n${scores}`);
     },
 
     async roll([max]: string[], user: User, channel: TextChannel) {
@@ -144,6 +159,7 @@ class GamblingGame {
         }
 
         this.channel.send(`<@${user.id}> has entered`);
+        // user.send(`You have entered for the game rolling for ${this.max}`);
 
         this.players[user.id] = { roll: null, user };
     }
@@ -155,6 +171,7 @@ class GamblingGame {
         }
 
         this.channel.send(`<@${user.id}> has withdrawn`);
+        // user.send(`You have withdrawn for the game rolling for ${this.max}`);
 
         delete this.players[user.id];
     }
@@ -223,11 +240,19 @@ class GamblingGame {
 
         // usernames change, but IDs are forever
         if (!stats[loser.id]) {
-            stats[loser.id] = { username: loser.username, score: 0 };
+            stats[loser.id] = {
+                id: loser.id,
+                username: loser.username,
+                score: 0,
+            };
         }
 
         if (!stats[winner.id]) {
-            stats[winner.id] = { username: winner.username, score: 0 };
+            stats[winner.id] = {
+                id: winner.id,
+                username: winner.username,
+                score: 0,
+            };
         }
 
         stats[winner.id].score += payout;

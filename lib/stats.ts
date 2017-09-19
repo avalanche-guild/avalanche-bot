@@ -7,6 +7,7 @@ const fs = Bluebird.promisifyAll(nodeFs);
 
 export type Stats = {
     [userId: string]: {
+        id: string,
         // a reference to their username at the time of the capture (reserved for future use)
         username: string,
         score: number,

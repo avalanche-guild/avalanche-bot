@@ -47,7 +47,7 @@ bot.on('message', async (originalMessage) => {
         if (message.content[0] === '!') {
             const [command, ...args] = message.content.replace(/^!/, '').split(' ');
 
-            message.command = command;
+            message.command = _.camelCase(command);
             message.args = args;
         }
 
