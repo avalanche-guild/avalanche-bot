@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const gamble = require('./gamble');
 
 const gamemaster = {
-    id: 1,
+    id: '118415403272634369',
     username: 'Volkner',
 };
 
@@ -62,7 +62,7 @@ test('Must play in a channel', async (t) => {
     t.is(callArg, 'You must play this game in a channel');
 });
 
-test('Must specify an amount', async (t) => {
+test('Must specify a max amount', async (t) => {
     await gamble.process({
         command: 'gamble',
         args: [],
@@ -71,7 +71,31 @@ test('Must specify an amount', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /You must specify how much you want to gamble for/);
+    t.regex(callArg, /You must specify the max amount to roll/);
+});
+
+test('Max amount must be an integer, not a string', async (t) => {
+    await gamble.process({
+        command: 'gamble',
+        args: ['banana'],
+        author: gamemaster,
+        channel: t.context.channel,
+    });
+
+    const callArg = t.context.channelSendStub.lastCall.args[0];
+    t.regex(callArg, /The max amount must be an integer/);
+});
+
+test('Max amount must be an integer, not a float', async (t) => {
+    await gamble.process({
+        command: 'gamble',
+        args: [5.245],
+        author: gamemaster,
+        channel: t.context.channel,
+    });
+
+    const callArg = t.context.channelSendStub.lastCall.args[0];
+    t.regex(callArg, /The max amount must be an integer/);
 });
 
 test('Starts game with correct input', async (t) => {
@@ -178,7 +202,7 @@ test('Only gamemaster can cancel the game', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, 'Only <@1> can cancel the game.');
+    t.is(callArg, 'Only <@118415403272634369> can cancel the game.');
 
     t.not(gamble.currentGame, null);
 });
@@ -194,7 +218,7 @@ test('Only gamemaster can start the game', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, '<@2> Only <@1> can start the roll.');
+    t.is(callArg, '<@2> Only <@118415403272634369> can start the roll.');
 
     t.not(gamble.currentGame, null);
 });
@@ -264,7 +288,7 @@ test('The proper pot amount is implied with `!roll`', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /<@1> rolled a \d{1,3}/);
+    t.regex(callArg, /<@118415403272634369> rolled a \d{1,3}/);
 });
 
 test('Must roll the correct amount', async (t) => {
@@ -351,7 +375,7 @@ test('Determines the winner', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /<@[12]> owes <@[12]> \d{1,3} gold/);
+    t.regex(callArg, /<@(2|118415403272634369)> owes <@(2|118415403272634369)> \d{1,3} gold/);
 });
 
 
@@ -390,7 +414,7 @@ async function startRolling(t) {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /<@1>, <@2>\n\n\*\*Type `!roll 500` to roll\*\*/);
+    t.regex(callArg, /\n\n\*\*Type `!roll 500` to roll\*\*/);
 
     t.true(gamble.currentGame.isRolling);
 }

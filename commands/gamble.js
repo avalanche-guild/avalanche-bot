@@ -18,9 +18,10 @@ const gamble = {
         }
     },
 
-    async gamble([pot], user, channel) {
-        if (user.username !== 'Volkner') {
-            channel.send(`<@${user.id}> During testing, only Volkner can start a game`);
+    async gamble([max], user, channel) {
+        // only Volkner can start a game right now
+        if (user.id !== '118415403272634369') {
+            channel.send(`<@${user.id}> During testing, only <@118415403272634369> can start a game`);
             return;
         }
 
@@ -33,12 +34,17 @@ const gamble = {
             return;
         }
 
-        if (!pot) {
-            channel.send('You must specify how much you want to gamble for, i.e. `!gamble 1000`');
+        if (!max) {
+            channel.send('You must specify the max amount to roll for, i.e. `!gamble 1000`');
             return;
         }
 
-        gamble.currentGame = new GamblingGame(pot, user, channel);
+        if (!Number(max) || !_.isInteger(max)) {
+            channel.send('The max amount must be an integer, i.e. `!gamble 1000`');
+            return;
+        }
+
+        gamble.currentGame = new GamblingGame(max, user, channel);
     },
 
     async roll([max], user, channel) {
@@ -65,8 +71,8 @@ const gamble = {
 module.exports = gamble;
 
 class GamblingGame {
-    constructor(pot, gamemaster, channel) {
-        this.pot = pot;
+    constructor(max, gamemaster, channel) {
+        this.max = max;
         this.gamemaster = gamemaster;
         this.channel = channel;
         this.isRolling = false;
@@ -74,7 +80,7 @@ class GamblingGame {
         this.players = {};
 
         this.channel.send(`
-@here **Let's gamble!** :moneybag: Playing for ${this.pot} gold.
+@here **Let's gamble!** :moneybag: Playing for ${numberFormat(this.max)} gold.
 
 Type \`!enter\` to play, \`!withdraw\` to withdraw.
 
@@ -93,16 +99,16 @@ The person with the lowest roll will pay the person with the highest roll the di
         }
 
         if (!max) {
-            max = this.pot;
+            max = this.max;
         }
 
-        if (max !== this.pot) {
-            this.channel.send(`<@${user.id}> you must roll out of ${this.pot}`);
+        if (max !== this.max) {
+            this.channel.send(`<@${user.id}> you must roll out of ${this.max}`);
             return;
         }
 
         if (this.players[user.id].roll) {
-            this.channel.send(`<@${user.id}> you have already rolled a ${this.players[user.id].roll}!`);
+            this.channel.send(`<@${user.id}> you have already rolled a ${numberFormat(this.players[user.id].roll)}!`);
             return;
         }
 
@@ -110,7 +116,7 @@ The person with the lowest roll will pay the person with the highest roll the di
 
         this.players[user.id].roll = roll;
 
-        this.channel.send(`<@${user.id}> rolled a ${roll}`);
+        this.channel.send(`<@${user.id}> rolled a ${numberFormat(this.players[user.id].roll)}`);
 
         this.checkGameEnd();
     }
@@ -160,7 +166,7 @@ These are the people playing:
 
 ${_.map(this.players, (v, id) => `<@${id}>`).join(', ')}
 
-**Type \`!roll ${this.pot}\` to roll**
+**Type \`!roll ${this.max}\` to roll**
 `);
 
         this.isRolling = true;
@@ -187,7 +193,7 @@ ${_.map(this.players, (v, id) => `<@${id}>`).join(', ')}
 
         const payout = max.roll - min.roll;
 
-        this.channel.send(`Everyone has rolled! ~~**<@${min.user.id}> owes <@${max.user.id}> ${payout} gold.**~~ No one pays out in test mode.`);
+        this.channel.send(`Everyone has rolled! ~~**<@${min.user.id}> owes <@${max.user.id}> ${numberFormat(payout)} gold.**~~ No one pays out in test mode.`);
 
         gamble.currentGame = null;
     }
@@ -199,4 +205,8 @@ function currentGameError(channel) {
 
 function getRandomNumber(min, max) {
     return _.random(min, max);
+}
+
+function numberFormat(num) {
+    return (+num).toLocaleString();
 }
