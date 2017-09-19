@@ -8,10 +8,35 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "node ."
+    "start": "node .",
+    "test": "nyc ava --serial"
   },
   "dependencies": {
+    "bluebird": "3.5.0",
     "discord.js": "11.2.1",
     "lodash": "4.17.4"
+  },
+  "devDependencies": {
+    "ava": "0.22.0",
+    "nyc": "11.2.1",
+    "sinon": "3.3.0"
+  },
+  "nyc": {
+    "all": true,
+    "checkCoverage": true,
+    "perFile": true,
+    "lines": 80,
+    "branches": 80,
+    "functions": 80,
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "exclude": [
+      "**/*.test.js"
+    ],
+    "include": [
+      "commands"
+    ]
   }
 }
