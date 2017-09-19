@@ -382,13 +382,13 @@ test('Prints who still needs to roll', async (t) => {
 });
 
 test('It\'s a critical hit!', async (t) => {
-    await startGame(t, '9999');
+    await startGame(t, '2215121114518');
 
     await startRolling(t);
 
     await command(<CommandMessage>{
         command: 'roll',
-        args: ['9999'],
+        args: ['2215121114518'],
         author: <User>gamemaster,
         channel: <TextChannel>t.context.channel,
     });
@@ -396,7 +396,7 @@ test('It\'s a critical hit!', async (t) => {
     const callArg = t.context.channelSendStub.lastCall.args[0];
     t.regex(callArg, /It's a critical hit!/);
 
-    t.is(gamble.currentGame.players[gamemaster.id].roll, 9999);
+    t.is(gamble.currentGame.players[gamemaster.id].roll, 2215121114518);
 });
 
 test('Determines the winner', async (t) => {

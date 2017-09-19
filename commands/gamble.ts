@@ -121,8 +121,8 @@ class GamblingGame {
 
         this.players[user.id].roll = getRandomNumber(max);
 
-        // Volkner always scores a critical hit on 9999
-        if (user.id === VOLKNER_ID && max === 9999) {
+        // You always score a critical hit if the roll is out of your magic number
+        if (max === determineTheMagic(user.username)) {
             this.players[user.id].roll = max;
             this.isSomeoneCheating = true;
         }
@@ -251,4 +251,11 @@ function numberFormat(num: string | number) {
 
 function trim(string) {
     return string.split('\n').map(str => str.trim()).join('\n');
+}
+
+function determineTheMagic(username: string): number {
+    const chars = ' abcdefghijklmnopqrstuvwxyz';
+    const key = username.toLowerCase().replace(/[^a-z]/g, '');
+
+    return +(_.map(key, char => chars.indexOf(char)).join(''));
 }

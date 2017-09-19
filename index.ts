@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Client, Message, TextChannel } from 'discord.js';
 import * as Bluebird from 'bluebird';
+import * as chalk from 'chalk';
 
 import { command as gamble } from './commands/gamble';
 
@@ -29,33 +30,37 @@ bot.on('ready', () => {
 });
 
 bot.on('message', async (originalMessage) => {
-    console.log(`[${originalMessage.author.username}] ${originalMessage.content}`);
+    try {
+        console.log(`[${chalk.yellow(originalMessage.author.username)}@${chalk.cyan((<TextChannel>originalMessage.channel).name)}] ${originalMessage.content}`);
 
-    if (originalMessage.content === 'ping') {
-        originalMessage.reply(`pong <#${originalMessage.channel.id}>`);
-        return;
-    }
-
-    const message: CommandMessage = <CommandMessage>{
-        ...originalMessage,
-        command: null,
-        args: [],
-    };
-
-    if (message.content[0] === '!') {
-        const [command, ...args] = message.content.replace(/^!/, '').split(' ');
-
-        message.command = command;
-        message.args = args;
-    }
-
-    await Bluebird.all(_.map(commands, async (command: Command, commandName: string) => {
-        try {
-            await command(message);
-        } catch (err) {
-            console.error(`Error from ${commandName}`, err);
+        if (originalMessage.content === 'ping') {
+            originalMessage.reply(`pong <#${originalMessage.channel.id}>`);
+            return;
         }
-    }));
+
+        const message: CommandMessage = <CommandMessage>{
+            ...originalMessage,
+            command: null,
+            args: [],
+        };
+
+        if (message.content[0] === '!') {
+            const [command, ...args] = message.content.replace(/^!/, '').split(' ');
+
+            message.command = command;
+            message.args = args;
+        }
+
+        await Bluebird.all(_.map(commands, async (command: Command, commandName: string) => {
+            try {
+                await command(message);
+            } catch (err) {
+                console.error(`Error from ${commandName}:`, err);
+            }
+        }));
+    } catch (err) {
+        console.error('Unexpected error:', err);
+    }
 });
 
 // get your token at https://discordapp.com/developers/applications/me

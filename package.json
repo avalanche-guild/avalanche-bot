@@ -17,12 +17,14 @@
   "dependencies": {
     "app-root-path": "2.0.1",
     "bluebird": "3.5.0",
+    "chalk": "2.1.0",
     "discord.js": "11.2.1",
     "lodash": "4.17.4",
     "mockery": "2.1.0"
   },
   "devDependencies": {
     "@types/app-root-path": "1.2.4",
+    "@types/chalk": "0.4.31",
     "@types/lodash": "4.14.74",
     "@types/mockery": "1.4.29",
     "@types/node": "8.0.28",
