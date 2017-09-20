@@ -2,7 +2,7 @@ version: '3'
 
 services:
   bot:
-    image: docker.com/avalanche-guild/avalanche-bot
+    image: cwspear/avalanche-bot
     build:
       context: ./
     environment:
