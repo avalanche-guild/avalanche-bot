@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  bot:
+    image: cwspear/avalanche-bot
+    build:
+      context: ./
+    environment:
+      DISCORD_TOKEN: "${DISCORD_TOKEN}"
+    tty: true
+    volumes:
+      - /data/avalanche-bot/stats/:/bot/stats/

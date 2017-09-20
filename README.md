@@ -4,7 +4,7 @@ This is a bot for the AVALANCHE Discord server. For fun.
 
 ### Development
 
-**Requires Node 8+.**
+**Requires Node 8.5+** as we're using ES6 modules.
 
 This project uses [Discord.js](https://discord.js.org/#/docs/main/stable/general/welcome) to fuel the bot. Refer to their docs for most of what you'll need.
 
