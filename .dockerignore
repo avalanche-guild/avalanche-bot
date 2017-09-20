@@ -1,0 +1,6 @@
+.idea
+node_modules
+.nyc_output
+coverage
+stats
+!stats/.gitkeep

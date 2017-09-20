@@ -31,7 +31,7 @@ bot.on('ready', () => {
 
 bot.on('message', async (originalMessage) => {
     try {
-        console.log(`[${chalk.yellow(originalMessage.author.username)}@${chalk.cyan((<TextChannel>originalMessage.channel).name)}] ${originalMessage.content}`);
+        // console.log(`[${chalk.yellow(originalMessage.author.username)}@${chalk.cyan((<TextChannel>originalMessage.channel).name)}] ${originalMessage.content}`);
 
         if (originalMessage.content === 'ping') {
             originalMessage.reply(`pong <#${originalMessage.channel.id}>`);
