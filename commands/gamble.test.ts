@@ -5,6 +5,7 @@ import * as mockery from 'mockery';
 import * as sinon from 'sinon';
 
 import { CommandMessage } from '../index';
+import { BOT_GAMBLING_ROOM_ID } from './gamble';
 
 let command;
 let gamble;
@@ -31,7 +32,7 @@ test.after(() => {
 
 
 const gamemaster = {
-    id: '118415403272634369',
+    id: '1',
     username: 'Volkner',
 };
 
@@ -46,7 +47,7 @@ test.beforeEach((t) => {
     t.context.channelSendStub = sinon.stub();
 
     t.context.channel = {
-        id: 10,
+        id: BOT_GAMBLING_ROOM_ID,
         name: 'mock-channel',
         send: t.context.channelSendStub,
     };
@@ -61,6 +62,35 @@ test('Does nothing on nonexistant command', async (t) => {
     });
 
     t.is(t.context.channelSendStub.callCount, 0);
+});
+
+test('Does nothing on in-game commands if a game is not going on', async (t) => {
+    await command(<CommandMessage>{
+        command: 'play',
+        args: [],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
+    });
+
+    t.is(t.context.channelSendStub.callCount, 0);
+});
+
+test('Can only play games in the proper channel', async (t) => {
+    t.context.channel = {
+        id: 12,
+        name: 'mock-channel-3',
+        send: t.context.channelSendStub,
+    };
+
+    await command(<CommandMessage>{
+        command: 'gamble',
+        args: ['500'],
+        author: <User>gamemaster,
+        channel: <TextChannel>t.context.channel,
+    });
+
+    const callArg = t.context.channelSendStub.lastCall.args[0];
+    t.is(callArg, `<@1> You can only gamble in the <#${BOT_GAMBLING_ROOM_ID}> channel.`);
 });
 
 test('Can\'t do other commands without a game started', async (t) => {
@@ -140,7 +170,7 @@ test('Only one game in this channel', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, 'A game is already on-going in <#10>');
+    t.is(callArg, 'A game is already on-going in <#360824589674348544>');
 });
 
 test('Only one game globally', async (t) => {
@@ -160,7 +190,7 @@ test('Only one game globally', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, 'A game is already on-going in <#10>');
+    t.is(callArg, `A game is already on-going in <#${BOT_GAMBLING_ROOM_ID}>`);
 });
 
 test('Won\'t let you play without at least 2 people', async (t) => {
@@ -228,7 +258,7 @@ test('Only gamemaster can cancel the game', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, 'Only <@118415403272634369> can cancel the game.');
+    t.is(callArg, 'Only <@1> can cancel the game.');
 
     t.not(gamble.currentGame, null);
 });
@@ -244,7 +274,7 @@ test('Only gamemaster can start the game', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.is(callArg, '<@2> Only <@118415403272634369> can start the roll.');
+    t.is(callArg, '<@2> Only <@1> can start the roll.');
 
     t.not(gamble.currentGame, null);
 });
@@ -314,7 +344,7 @@ test('The proper pot amount is implied with `!roll`', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /<@118415403272634369> rolled a \d{1,3}/);
+    t.regex(callArg, /<@1> rolled a \d{1,3}/);
 });
 
 test('Must roll the correct amount', async (t) => {
@@ -419,7 +449,7 @@ test('Determines the winner', async (t) => {
     });
 
     const callArg = t.context.channelSendStub.lastCall.args[0];
-    t.regex(callArg, /<@(2|118415403272634369)> owes <@(2|118415403272634369)> \d{1,3} gold/);
+    t.regex(callArg, /<@(2|1)> owes <@(2|1)> \d{1,3} gold/);
 });
 
 
