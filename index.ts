@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Client, Message, TextChannel } from 'discord.js';
 import * as Bluebird from 'bluebird';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 import { command as gamble } from './commands/gamble';
 
