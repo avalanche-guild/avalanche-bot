@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { CommandMessage } from '../index';
 import { fetch, save } from '../lib/stats';
 
-const VOLKNER_ID = '118415403272634369';
+export const BOT_GAMBLING_ROOM_ID = '360824589674348544';
 
 export async function command({ command, args, author, channel }: CommandMessage) {
     if (_.includes(['gambleStats'], command)) {
@@ -20,6 +20,10 @@ export async function command({ command, args, author, channel }: CommandMessage
             return;
         }
 
+        if (!checkLegalRoom(channel, author)) {
+            return;
+        }
+
         await gamble[command](args, author, channel);
     }
 }
@@ -29,12 +33,6 @@ export const gamble = {
     currentGame: null,
 
     async gamble([max], user, channel) {
-        // only Volkner can start a game right now
-        if (user.id !== VOLKNER_ID) {
-            channel.send(`<@${user.id}> During testing, only <@${VOLKNER_ID}> can start a game`);
-            return;
-        }
-
         if (gamble.currentGame) {
             return currentGameError(channel);
         }
@@ -62,7 +60,7 @@ export const gamble = {
         console.log(stats);
 
         const scores = _.map(stats, ({ username, score, id }) => {
-            return `<@${id}>: ${score}`;
+            return `<@${id}>: ${(+score).toLocaleString()}`;
         }).join('\n');
 
         channel.send(`**Running Totals:**\n\n${scores}`);
@@ -111,8 +109,6 @@ class GamblingGame {
             When everyone has entered, <@${this.gameMaster.id}> types \`!play\` to start the rolling.
             
             The person with the lowest roll will pay the person with the highest roll the difference of their two rolls.
-            
-            **While in test mode, all games are "for fun." The loser does not have to payout (in case there are bugs) and no stats are tracked.**
         `));
     }
 
@@ -226,7 +222,7 @@ class GamblingGame {
 
         const payout = max.roll - min.roll;
 
-        this.channel.send(`Everyone has rolled! ~~**<@${min.user.id}> owes <@${max.user.id}> ${numberFormat(payout)} gold.**~~ No one pays out in test mode.`);
+        this.channel.send(`Everyone has rolled! **<@${min.user.id}> owes <@${max.user.id}> ${numberFormat(payout)} gold.**`);
 
         if (!this.isSomeoneCheating) {
             await this.saveStats(min.user, max.user, payout);
@@ -262,8 +258,17 @@ class GamblingGame {
     }
 }
 
-function currentGameError(channel) {
+function currentGameError(channel: TextChannel) {
     channel.send(`A game is already on-going in <#${gamble.currentGame.channel.id}>`);
+}
+
+function checkLegalRoom(channel: TextChannel, user: User) {
+    if (channel.id !== BOT_GAMBLING_ROOM_ID) {
+        channel.send(`<@${user.id}> You can only gamble in the <#${BOT_GAMBLING_ROOM_ID}> channel.`);
+        return false;
+    }
+
+    return true;
 }
 
 function getRandomNumber(max: number) {
