@@ -60,7 +60,7 @@ export const gamble = {
         console.log(stats);
 
         const scores = _.map(stats, ({ username, score, id }) => {
-            return `<@${id}>: ${score}`;
+            return `<@${id}>: ${(+score).toLocaleString()}`;
         }).join('\n');
 
         channel.send(`**Running Totals:**\n\n${scores}`);

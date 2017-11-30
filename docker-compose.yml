@@ -3,6 +3,7 @@ version: '3'
 services:
   bot:
     image: cwspear/avalanche-bot
+    restart: always
     build:
       context: ./
     environment:
